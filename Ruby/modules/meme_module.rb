@@ -13,18 +13,27 @@ end
 def send_random_memes(event)
   event.channel.send_message("Here are some memes!")
 
+  # Create an array to store asynchronous tasks
+  tasks = []
+
   3.times do
-    image_url = get_random_anime_image
-    if image_url
-      image_data = HTTParty.get(image_url).body
-      File.open('image.jpg', 'wb') { |f| f.write(image_data) }
-      event.channel.send_file(File.new('image.jpg'))
-      sleep(1)
-    else
-      event.channel.send_message('Failed to get the image.')
+    tasks << Thread.new do
+      image_url = get_random_anime_image
+      if image_url
+        image_data = HTTParty.get(image_url).body
+        File.open('image.jpg', 'wb') { |f| f.write(image_data) }
+        event.channel.send_file(File.new('image.jpg'))
+        sleep(1)
+      else
+        event.channel.send_message('Failed to get the image.')
+      end
     end
   end
+
+  # Wait for all tasks to complete
+  tasks.each(&:join)
 end
+
 
 def send_single_meme(event)
   event.channel.send_message("Here's your meme!")
